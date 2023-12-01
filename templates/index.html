@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Raspberry Pi Control</title>
+</head>
+<body>
+    <h1>Select a Program to Run</h1>
+    <form action="/start" method="post">
+        {% for program in programs %}
+            <input type="submit" name="program" value="{{ program }}">
+        {% endfor %}
+    </form>
+</body>
+</html>
