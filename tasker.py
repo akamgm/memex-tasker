@@ -3,11 +3,9 @@ import signal
 from time import sleep
 from flask import Flask, render_template, request
 import subprocess
+import psutil
 
 app = Flask(__name__)
-
-# Directory containing the programs
-apps_dir = 'apps/'
 
 # Function to list available programs
 def list_programs(directory):
@@ -18,20 +16,34 @@ def list_programs(directory):
             programs[name] = os.path.join(directory, filename)
     return programs
 
+def find_running_program(programs):
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            # Check if the process command line matches any of our program scripts
+            for name, path in programs.items():
+                if path in proc.info['cmdline']:
+                    return proc, name
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return None, None
+
+# Directory containing the programs
+apps_dir = 'apps/'
+programs = list_programs(apps_dir)
+
 # Keep track of the currently running process
-current_process = None
+current_process, current_program = find_running_program(programs)
 
 @app.route('/')
 def index():
-    programs = list_programs(apps_dir)
     return render_template('index.html', programs=programs.keys())
 
 @app.route('/start', methods=['POST'])
 def start_program():
     global current_process
-    programs = list_programs(apps_dir)
-    
-    program_name = request.form.get('program')
+
+    data = request.get_json()
+    program_name = data['program']
 
     # Stop the currently running program, if any
     if current_process:

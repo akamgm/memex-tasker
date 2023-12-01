@@ -1,14 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Raspberry Pi Control</title>
+    <title>Tiny Memex Task Manager</title>
+    <script>
+        function startProgram(programName) {
+            fetch('/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ program: programName }),
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('status').innerText = data;
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
 </head>
 <body>
     <h1>Select a Program to Run</h1>
-    <form action="/start" method="post">
+    <div id="program-list">
         {% for program in programs %}
-            <input type="submit" name="program" value="{{ program }}">
+            <button onclick="startProgram('{{ program }}')">{{ program }}</button>
         {% endfor %}
-    </form>
+    </div>
+    <p id="status"></p>
 </body>
 </html>
+
